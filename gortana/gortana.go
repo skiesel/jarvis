@@ -1,11 +1,12 @@
 package gortana
+
 /*
   This is very lightly modified from:
   https://github.com/xlab/pocketsphinx-go/blob/master/example/gortana/main.go
 */
 
 import (
-  "flag"
+	"flag"
 	"log"
 	"os"
 	"unsafe"
@@ -23,16 +24,15 @@ const (
 )
 
 var (
-  gopath  = os.Getenv("GOPATH")
-	hmm     = flag.String("hmm", gopath + "src/github.com/cmusphinx/pocketsphinx/model/en-us/en-us", "Sets directory containing acoustic model files.")
-	dict    = flag.String("dict", gopath + "src/github.com/cmusphinx/pocketsphinx/model/en-us/cmudict-en-us.dict", "Sets main pronunciation dictionary (lexicon) input file..")
-	lm      = flag.String("lm", gopath + "src/github.com/cmusphinx/pocketsphinx/model/en-us/en-us.lm.bin", "Sets word trigram language model input file.")
+	gopath  = os.Getenv("GOPATH")
+	hmm     = flag.String("hmm", gopath+"src/github.com/cmusphinx/pocketsphinx/model/en-us/en-us", "Sets directory containing acoustic model files.")
+	dict    = flag.String("dict", gopath+"src/github.com/cmusphinx/pocketsphinx/model/en-us/cmudict-en-us.dict", "Sets main pronunciation dictionary (lexicon) input file..")
+	lm      = flag.String("lm", gopath+"src/github.com/cmusphinx/pocketsphinx/model/en-us/en-us.lm.bin", "Sets word trigram language model input file.")
 	logfile = flag.String("log", "gortana.log", "Log file to write log to.")
-  debugFile = flag.String("debug", "gortana.debug.log", "Debug log file to write log to.")
 	stdout  = flag.Bool("stdout", false, "Disables log file and writes everything to stdout.")
 	outraw  = flag.String("outraw", "", "Specify output dir for RAW recorded sound files (s16le). Directory must exist.")
 
-  savedStream *portaudio.Stream
+	savedStream *portaudio.Stream
 )
 
 func Listen(inform chan string) {
@@ -40,25 +40,18 @@ func Listen(inform chan string) {
 }
 
 func Pause() {
-  portaudio.StopStream(savedStream)
+	portaudio.StopStream(savedStream)
 }
 
 func Resume() {
-  portaudio.StartStream(savedStream)
+	portaudio.StartStream(savedStream)
 }
 
 func listen(inform chan string) {
-  debug, err := os.OpenFile(*debugFile, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
-  if err != nil {
-      closer.Fatalln(err)
-  }
-  log.SetOutput(debug)
-
 	defer closer.Close()
 	closer.Bind(func() {
-    inform <- "Bye!"
+		inform <- "Bye!"
 		log.Println("Bye!")
-    debug.Close()
 	})
 	if err := portaudio.Initialize(); paError(err) {
 		log.Fatalln("PortAudio init error:", paErrorText(err))
@@ -83,7 +76,7 @@ func listen(inform chan string) {
 		sphinx.LogFileOption(*logfile)(cfg)
 	}
 
-  log.Println(cfg)
+	log.Println(cfg)
 
 	log.Println("Loading CMU PhocketSphinx.")
 	log.Println("This may take a while depending on the size of your model.")
@@ -95,8 +88,8 @@ func listen(inform chan string) {
 		dec.Destroy()
 	})
 	l := &Listener{
-    inform: inform,
-		dec: dec,
+		inform: inform,
+		dec:    dec,
 	}
 
 	var stream *portaudio.Stream
@@ -119,7 +112,7 @@ func listen(inform chan string) {
 		}
 	})
 
-  savedStream = stream
+	savedStream = stream
 
 	if !dec.StartUtt() {
 		closer.Fatalln("[ERR] Sphinx failed to start utterance")
@@ -130,7 +123,7 @@ func listen(inform chan string) {
 }
 
 type Listener struct {
-  inform     chan string
+	inform     chan string
 	inSpeech   bool
 	uttStarted bool
 	dec        *sphinx.Decoder
@@ -175,7 +168,7 @@ func (l *Listener) report() {
 	hyp, _ := l.dec.Hypothesis()
 	if len(hyp) > 0 {
 		log.Printf("    > hypothesis: %s", hyp)
-    l.inform <- hyp
+		l.inform <- hyp
 		return
 	}
 	log.Println("ah, nothing")
